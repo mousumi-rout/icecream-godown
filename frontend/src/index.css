@@ -1,0 +1,288 @@
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+
+/* =========================
+   DARK MODE
+========================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --social-bg: rgba(47, 48, 58, 0.5);
+
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px,
+      rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  }
+
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+
+/* =========================
+   BODY
+========================= */
+
+body {
+  margin: 0;
+}
+
+
+/* =========================
+   ROOT
+========================= */
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+
+/* =========================
+   HEADINGS
+========================= */
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+
+
+/* =========================
+   PARAGRAPH
+========================= */
+
+p {
+  margin: 0;
+}
+
+
+/* =========================
+   CODE / COUNTER
+========================= */
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+
+/* =========================
+   MOBILE PRODUCT CARDS
+========================= */
+
+.mobile-products {
+  display: none;
+}
+
+.product-card-mobile {
+  background: white;
+  padding: 18px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.mobile-product-header h3 {
+  margin: 0;
+  color: #222;
+}
+
+.mobile-product-header span {
+  color: #777;
+  font-size: 13px;
+}
+
+.product-card-mobile p {
+  margin: 9px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.mobile-product-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.mobile-product-actions button {
+  flex: 1;
+}
+
+
+/* =========================
+   MOBILE TRANSACTION HISTORY
+========================= */
+
+.desktop-history-table {
+  display: block;
+}
+
+.mobile-history {
+  display: none;
+}
+
+.history-card-mobile {
+  background: white;
+  padding: 18px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.history-card-header h3 {
+  margin: 0;
+  color: #222;
+  font-size: 16px;
+}
+
+.history-card-mobile p {
+  margin: 9px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  /* General */
+
+  #root {
+    width: 100%;
+    border: none;
+  }
+
+  /* Products */
+
+  .desktop-table {
+    display: none;
+  }
+
+  .mobile-products {
+    display: block;
+  }
+
+  /* Transaction History */
+
+  .desktop-history-table {
+    display: none !important;
+  }
+
+  .mobile-history {
+    display: block !important;
+    width: 100%;
+  }
+
+  .history-card-mobile {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
