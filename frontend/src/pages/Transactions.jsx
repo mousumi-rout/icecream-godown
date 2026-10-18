@@ -1,4 +1,4 @@
-function Transactions({ user, transactions }) {
+function Transactions({ user, transactions = [] }) {
   if (user?.role !== "ADMIN") {
     return null;
   }
@@ -8,9 +8,11 @@ function Transactions({ user, transactions }) {
 
     const date = new Date(dateTime);
 
-    if (Number.isNaN(date.getTime())) return "-";
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
 
-    return date.toLocaleString();
+    return date.toLocaleString("en-IN");
   };
 
   const stockInCount = transactions.filter(
@@ -45,12 +47,15 @@ function Transactions({ user, transactions }) {
     },
   ];
 
+  const sortedTransactions = [...transactions].reverse();
+
   return (
     <main className="transactions-section">
-      {/* Page Heading */}
       <header className="transactions-heading">
         <span className="transactions-eyebrow">INVENTORY MANAGEMENT</span>
+
         <h1>📋 Transaction History</h1>
+
         <p>Track stock IN and stock OUT activity.</p>
       </header>
 
@@ -63,6 +68,7 @@ function Transactions({ user, transactions }) {
           >
             <div className="transactions-summary-top">
               <div className="transactions-summary-icon">{card.icon}</div>
+
               <span>{card.title}</span>
             </div>
 
@@ -75,7 +81,7 @@ function Transactions({ user, transactions }) {
         ))}
       </section>
 
-      {/* Transactions Table */}
+      {/* Transaction Table */}
       <section className="transactions-table-card">
         <div className="transactions-table-heading">
           <div>
@@ -88,13 +94,14 @@ function Transactions({ user, transactions }) {
           </span>
         </div>
 
-        {/* Desktop and Tablet Table */}
+        {/* Desktop Table */}
         <div className="table-responsive d-none d-md-block">
           <table className="table table-hover align-middle mb-0 transactions-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Product</th>
+                <th>Performed By</th>
                 <th>Type</th>
                 <th>Quantity</th>
                 <th>Previous Stock</th>
@@ -104,12 +111,20 @@ function Transactions({ user, transactions }) {
             </thead>
 
             <tbody>
-              {[...transactions].reverse().map((transaction) => (
+              {sortedTransactions.map((transaction) => (
                 <tr key={transaction.id}>
                   <td className="transaction-id">#{transaction.id}</td>
 
                   <td className="transaction-product">
                     {transaction.product?.productName || "Unknown Product"}
+                  </td>
+
+                  <td className="transaction-performer">
+                    {transaction.performedBy?.name || "Not recorded"}
+
+                    {transaction.performedBy?.role && (
+                      <small> ({transaction.performedBy.role})</small>
+                    )}
                   </td>
 
                   <td>
@@ -146,7 +161,7 @@ function Transactions({ user, transactions }) {
 
               {transactions.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="text-center py-5 text-muted">
+                  <td colSpan="8" className="text-center py-5 text-muted">
                     No transactions available yet.
                   </td>
                 </tr>
@@ -155,7 +170,7 @@ function Transactions({ user, transactions }) {
           </table>
         </div>
 
-        {/* Mobile Transaction Cards */}
+        {/* Mobile Cards */}
         <div className="d-md-none transactions-mobile-list">
           {transactions.length === 0 ? (
             <p className="text-center text-muted py-4 mb-0">
@@ -163,7 +178,7 @@ function Transactions({ user, transactions }) {
             </p>
           ) : (
             <div className="row g-3">
-              {[...transactions].reverse().map((transaction) => (
+              {sortedTransactions.map((transaction) => (
                 <div className="col-12" key={transaction.id}>
                   <article className="transactions-mobile-card">
                     <div className="transactions-mobile-top">
@@ -172,6 +187,7 @@ function Transactions({ user, transactions }) {
                           {transaction.product?.productName ||
                             "Unknown Product"}
                         </h3>
+
                         <span>Transaction #{transaction.id}</span>
                       </div>
 
@@ -189,6 +205,17 @@ function Transactions({ user, transactions }) {
                     </div>
 
                     <div className="transactions-mobile-grid">
+                      <div>
+                        <span>Performed By</span>
+                        <strong>
+                          {transaction.performedBy?.name || "Not recorded"}
+                        </strong>
+
+                        {transaction.performedBy?.role && (
+                          <small> ({transaction.performedBy.role})</small>
+                        )}
+                      </div>
+
                       <div>
                         <span>Quantity</span>
                         <strong>{transaction.quantity}</strong>

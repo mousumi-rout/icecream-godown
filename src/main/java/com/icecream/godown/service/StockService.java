@@ -1,3 +1,4 @@
+
 package com.icecream.godown.service;
 
 import java.time.LocalDateTime;
@@ -8,64 +9,65 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.icecream.godown.entity.Product;
 import com.icecream.godown.entity.StockTransaction;
+import com.icecream.godown.entity.User;
 import com.icecream.godown.repository.ProductRepository;
 import com.icecream.godown.repository.StockTransactionRepository;
+import com.icecream.godown.repository.UserRepository;
 
 @Service
 public class StockService {
 
     private final ProductRepository productRepository;
     private final StockTransactionRepository stockTransactionRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
 
     public StockService(
             ProductRepository productRepository,
             StockTransactionRepository stockTransactionRepository,
+            UserRepository userRepository,
             EmailService emailService) {
 
         this.productRepository = productRepository;
         this.stockTransactionRepository = stockTransactionRepository;
+        this.userRepository = userRepository;
         this.emailService = emailService;
     }
 
-    // Validate quantity and QR code
     private void validateStockRequest(String qrCode, int quantity) {
-
         if (qrCode == null || qrCode.isBlank()) {
-            throw new IllegalArgumentException(
-                    "QR code cannot be empty"
-            );
+            throw new IllegalArgumentException("QR code cannot be empty");
         }
 
         if (quantity <= 0) {
             throw new IllegalArgumentException(
-                    "Quantity must be greater than zero"
-            );
+                    "Quantity must be greater than zero");
         }
     }
 
-    // =========================
+    private User findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("User not found"));
+    }
+
     // STOCK IN
-    // =========================
     @Transactional
-    public StockTransaction stockIn(String qrCode, int quantity) {
+    public StockTransaction stockIn(
+            String qrCode, int quantity, Long userId) {
 
         validateStockRequest(qrCode, quantity);
 
         Product product = productRepository.findByQrCode(qrCode)
-            .orElseThrow(() ->
-        new IllegalArgumentException(
-                "Product not found with QR code: " + qrCode
-        )
-);
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Product not found with QR code: " + qrCode));
 
         int previousStock = product.getCurrentStock();
 
-        // Prevent integer overflow
         if (previousStock > Integer.MAX_VALUE - quantity) {
             throw new IllegalArgumentException(
-                    "Stock quantity exceeds the supported limit"
-            );
+                    "Stock quantity exceeds the supported limit");
         }
 
         int newStock = previousStock + quantity;
@@ -75,6 +77,7 @@ public class StockService {
 
         StockTransaction transaction = new StockTransaction();
         transaction.setProduct(product);
+        transaction.setPerformedBy(findUser(userId));
         transaction.setTransactionType("IN");
         transaction.setQuantity(quantity);
         transaction.setPreviousStock(previousStock);
@@ -84,7 +87,6 @@ public class StockService {
         StockTransaction savedTransaction =
                 stockTransactionRepository.save(transaction);
 
-        // Send email after recording Stock IN
         try {
             emailService.sendStockEmail(
                     product.getProductName(),
@@ -92,39 +94,33 @@ public class StockService {
                     "IN",
                     quantity,
                     previousStock,
-                    newStock
-            );
+                    newStock);
         } catch (Exception e) {
             System.err.println(
-                    "Email could not be sent: " + e.getMessage()
-            );
+                    "Email could not be sent: " + e.getMessage());
         }
 
         return savedTransaction;
     }
 
-    // =========================
     // STOCK OUT
-    // =========================
     @Transactional
-    public StockTransaction stockOut(String qrCode, int quantity) {
+    public StockTransaction stockOut(
+            String qrCode, int quantity, Long userId) {
 
         validateStockRequest(qrCode, quantity);
 
         Product product = productRepository.findByQrCode(qrCode)
                 .orElseThrow(() ->
-        new IllegalArgumentException(
-                "Product not found with QR code: " + qrCode
-        )
-);
+                        new IllegalArgumentException(
+                                "Product not found with QR code: " + qrCode));
 
         int previousStock = product.getCurrentStock();
 
         if (quantity > previousStock) {
             throw new IllegalArgumentException(
                     "Not enough stock available. Available stock: "
-                            + previousStock
-            );
+                            + previousStock);
         }
 
         int newStock = previousStock - quantity;
@@ -134,6 +130,7 @@ public class StockService {
 
         StockTransaction transaction = new StockTransaction();
         transaction.setProduct(product);
+        transaction.setPerformedBy(findUser(userId));
         transaction.setTransactionType("OUT");
         transaction.setQuantity(quantity);
         transaction.setPreviousStock(previousStock);
@@ -143,7 +140,6 @@ public class StockService {
         StockTransaction savedTransaction =
                 stockTransactionRepository.save(transaction);
 
-        // Send email after recording Stock OUT
         try {
             emailService.sendStockEmail(
                     product.getProductName(),
@@ -151,27 +147,21 @@ public class StockService {
                     "OUT",
                     quantity,
                     previousStock,
-                    newStock
-            );
+                    newStock);
         } catch (Exception e) {
             System.err.println(
-                    "Email could not be sent: " + e.getMessage()
-            );
+                    "Email could not be sent: " + e.getMessage());
         }
 
         return savedTransaction;
     }
 
-    // =========================
     // GET ALL TRANSACTIONS
-    // =========================
     public List<StockTransaction> getAllTransactions() {
         return stockTransactionRepository.findAll();
     }
 
-    // =========================
     // GET PRODUCT TRANSACTIONS
-    // =========================
     public List<StockTransaction> getProductTransactions(Long productId) {
         return stockTransactionRepository
                 .findByProductIdOrderByTransactionTimeDesc(productId);

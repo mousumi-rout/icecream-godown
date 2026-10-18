@@ -387,18 +387,19 @@ const loadTransactions = async () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/stock/${type}`, {
-        method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+const response = await fetch(`${API_URL}/api/stock/${type}`, {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    qrCode: qrCodeToUse,
+    quantity: quantityToUse,
+  }),
+});
 
-        body: JSON.stringify({
-          qrCode: qrCodeToUse,
-          quantity: quantityToUse,
-        }),
-      });
 
       if (response.ok) {
         await response.json();
