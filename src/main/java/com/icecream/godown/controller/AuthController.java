@@ -27,7 +27,6 @@ public class AuthController {
         this.userService = userService;
     }
 
-    // Login API
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody LoginRequest request,
@@ -36,28 +35,34 @@ public class AuthController {
         return userService.findByUsername(request.getUsername())
                 .map(user -> {
 
-                    if (userService.checkPassword(
+                    if (!userService.checkPassword(
                             request.getPassword(),
                             user.getPassword())) {
 
-                        session.setAttribute("userId", user.getId());
-                        session.setAttribute("username", user.getUsername());
-                        session.setAttribute("role", user.getRole());
-
-                        return ResponseEntity.ok(
-                                new LoginResponse(
-                                        user.getId(),
-                                        user.getName(),
-                                        user.getUsername(),
-                                        user.getRole()
-                                )
-                        );
+                        return ResponseEntity
+                                .status(401)
+                                .body("Invalid username or password");
                     }
 
-                    return ResponseEntity
-                            .status(401)
-                            .body("Invalid username or password");
+                    // Block deactivated accounts
+                    if (!user.isActive()) {
+                        return ResponseEntity
+                                .status(403)
+                                .body("Your account has been deactivated. Please contact Admin.");
+                    }
 
+                    session.setAttribute("userId", user.getId());
+                    session.setAttribute("username", user.getUsername());
+                    session.setAttribute("role", user.getRole());
+
+                    return ResponseEntity.ok(
+                            new LoginResponse(
+                                    user.getId(),
+                                    user.getName(),
+                                    user.getUsername(),
+                                    user.getRole()
+                            )
+                    );
                 })
                 .orElse(
                         ResponseEntity
@@ -66,12 +71,9 @@ public class AuthController {
                 );
     }
 
-    // Logout API
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
-
         session.invalidate();
-
         return ResponseEntity.ok("Logged out successfully");
     }
 }

@@ -1,12 +1,18 @@
+
 package com.icecream.godown.repository;
 
-import com.icecream.godown.entity.StockTransaction;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.icecream.godown.entity.StockTransaction;
 
 public interface StockTransactionRepository
         extends JpaRepository<StockTransaction, Long> {
 
-    List<StockTransaction> findByProductIdOrderByTransactionTimeDesc(Long productId);
+    List<StockTransaction> findByProductIdOrderByTransactionTimeDesc(
+            Long productId
+    );
+
+    boolean existsByPerformedById(Long userId);
 }
