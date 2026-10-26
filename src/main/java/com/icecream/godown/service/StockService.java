@@ -1,4 +1,3 @@
-
 package com.icecream.godown.service;
 
 import java.time.LocalDateTime;
@@ -21,17 +20,20 @@ public class StockService {
     private final StockTransactionRepository stockTransactionRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final TelegramService telegramService;
 
     public StockService(
             ProductRepository productRepository,
             StockTransactionRepository stockTransactionRepository,
             UserRepository userRepository,
-            EmailService emailService) {
+            EmailService emailService,
+            TelegramService telegramService) {
 
         this.productRepository = productRepository;
         this.stockTransactionRepository = stockTransactionRepository;
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.telegramService = telegramService;
     }
 
     private void validateStockRequest(String qrCode, int quantity) {
@@ -51,6 +53,44 @@ public class StockService {
                         new IllegalArgumentException("User not found"));
     }
 
+    private void sendNotifications(
+            Product product,
+            String qrCode,
+            String transactionType,
+            int quantity,
+            int previousStock,
+            int newStock,
+            User user) {
+
+        try {
+            emailService.sendStockEmail(
+                    product.getProductName(),
+                    qrCode,
+                    transactionType,
+                    quantity,
+                    previousStock,
+                    newStock);
+        } catch (Exception e) {
+            System.err.println(
+                    "Email could not be sent: " + e.getMessage());
+        }
+
+        try {
+            telegramService.sendStockTelegram(
+                    product.getProductName(),
+                    qrCode,
+                    transactionType,
+                    quantity,
+                    previousStock,
+                    newStock,
+                    user.getName());
+        } catch (Exception e) {
+            System.err.println(
+                    "Telegram notification could not be sent: "
+                            + e.getMessage());
+        }
+    }
+
     // STOCK IN
     @Transactional
     public StockTransaction stockIn(
@@ -62,6 +102,8 @@ public class StockService {
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 "Product not found with QR code: " + qrCode));
+
+        User user = findUser(userId);
 
         int previousStock = product.getCurrentStock();
 
@@ -77,7 +119,7 @@ public class StockService {
 
         StockTransaction transaction = new StockTransaction();
         transaction.setProduct(product);
-        transaction.setPerformedBy(findUser(userId));
+        transaction.setPerformedBy(user);
         transaction.setTransactionType("IN");
         transaction.setQuantity(quantity);
         transaction.setPreviousStock(previousStock);
@@ -87,18 +129,9 @@ public class StockService {
         StockTransaction savedTransaction =
                 stockTransactionRepository.save(transaction);
 
-        try {
-            emailService.sendStockEmail(
-                    product.getProductName(),
-                    qrCode,
-                    "IN",
-                    quantity,
-                    previousStock,
-                    newStock);
-        } catch (Exception e) {
-            System.err.println(
-                    "Email could not be sent: " + e.getMessage());
-        }
+        sendNotifications(
+                product, qrCode, "IN", quantity,
+                previousStock, newStock, user);
 
         return savedTransaction;
     }
@@ -115,6 +148,8 @@ public class StockService {
                         new IllegalArgumentException(
                                 "Product not found with QR code: " + qrCode));
 
+        User user = findUser(userId);
+
         int previousStock = product.getCurrentStock();
 
         if (quantity > previousStock) {
@@ -130,7 +165,7 @@ public class StockService {
 
         StockTransaction transaction = new StockTransaction();
         transaction.setProduct(product);
-        transaction.setPerformedBy(findUser(userId));
+        transaction.setPerformedBy(user);
         transaction.setTransactionType("OUT");
         transaction.setQuantity(quantity);
         transaction.setPreviousStock(previousStock);
@@ -140,18 +175,9 @@ public class StockService {
         StockTransaction savedTransaction =
                 stockTransactionRepository.save(transaction);
 
-        try {
-            emailService.sendStockEmail(
-                    product.getProductName(),
-                    qrCode,
-                    "OUT",
-                    quantity,
-                    previousStock,
-                    newStock);
-        } catch (Exception e) {
-            System.err.println(
-                    "Email could not be sent: " + e.getMessage());
-        }
+        sendNotifications(
+                product, qrCode, "OUT", quantity,
+                previousStock, newStock, user);
 
         return savedTransaction;
     }
