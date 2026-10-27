@@ -17,6 +17,7 @@ import Transactions from "./pages/Transactions.jsx";
 import LabourManagement from "./pages/LabourManagement.jsx";
 
 import "./App.css";
+import Chatbot from "./Chatbot";
 
 const API_URL = "http://localhost:8080";
 
@@ -146,25 +147,21 @@ function App() {
     }
   };
 
+  const loadTransactions = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/stock/history`);
 
+      if (!response.ok) {
+        throw new Error("Failed to load transactions");
+      }
 
-const loadTransactions = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/stock/history`);
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error("Failed to load transactions");
+      setTransactions(data);
+    } catch (error) {
+      console.error("Transactions loading error:", error);
     }
-
-    const data = await response.json();
-
-    setTransactions(data);
-  } catch (error) {
-    console.error("Transactions loading error:", error);
-  }
-};
-
-
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -387,19 +384,17 @@ const loadTransactions = async () => {
     }
 
     try {
-
-const response = await fetch(`${API_URL}/api/stock/${type}`, {
-  method: "POST",
-  credentials: "include",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    qrCode: qrCodeToUse,
-    quantity: quantityToUse,
-  }),
-});
-
+      const response = await fetch(`${API_URL}/api/stock/${type}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          qrCode: qrCodeToUse,
+          quantity: quantityToUse,
+        }),
+      });
 
       if (response.ok) {
         await response.json();
@@ -490,24 +485,24 @@ const response = await fetch(`${API_URL}/api/stock/${type}`, {
   // LOGOUT
   // =========================
 
-const handleLogout = async () => {
-  try {
-    await fetch("http://localhost:8080/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-  } catch (error) {
-    console.error("Logout request failed:", error);
-  } finally {
-    setUser(null);
-    setProducts([]);
-    setTransactions([]);
-    setShowScanner(false);
-    setStockMode(null);
-    setStockMessage("");
-    navigate("/login", { replace: true });
-  }
-};
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout request failed:", error);
+    } finally {
+      setUser(null);
+      setProducts([]);
+      setTransactions([]);
+      setShowScanner(false);
+      setStockMode(null);
+      setStockMessage("");
+      navigate("/login", { replace: true });
+    }
+  };
 
   // =========================
   // LOGIN
@@ -547,129 +542,117 @@ const handleLogout = async () => {
       {/* HEADER */}
 
       {/* HEADER */}
-<nav className="navbar navbar-expand-lg app-navbar sticky-top">
-  <div className="container-fluid px-3 px-lg-4">
-    <Link
-      to={user.role === "ADMIN" ? "/dashboard" : "/stock"}
-      className="navbar-brand app-brand"
-      onClick={() => setMenuOpen(false)}
-    >
-      <span className="brand-icon">🍦</span>
-      <span>Ice Cream Godown</span>
-    </Link>
-
-    <button
-      className="navbar-toggler app-menu-toggle"
-      type="button"
-      onClick={() => setMenuOpen(!menuOpen)}
-      aria-controls="mainNavbar"
-      aria-expanded={menuOpen}
-      aria-label="Toggle navigation"
-    >
-      <span className="navbar-toggler-icon"></span>
-    </button>
-
-    <div
-      className={`collapse navbar-collapse ${
-        menuOpen ? "show" : ""
-      }`}
-      id="mainNavbar"
-    >
-      <ul className="navbar-nav me-auto app-nav-links">
-        {user.role === "ADMIN" && (
-          <>
-            <li className="nav-item">
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  `nav-link app-nav-link ${
-                    isActive ? "active" : ""
-                  }`
-                }
-                onClick={() => setMenuOpen(false)}
-              >
-                Dashboard
-              </NavLink>
-            </li>
-
-            <li className="nav-item">
-              <NavLink
-                to="/products"
-                className={({ isActive }) =>
-                  `nav-link app-nav-link ${
-                    isActive ? "active" : ""
-                  }`
-                }
-                onClick={() => setMenuOpen(false)}
-              >
-                Products
-              </NavLink>
-            </li>
-
-            <li className="nav-item">
-              <NavLink
-                to="/transactions"
-                className={({ isActive }) =>
-                  `nav-link app-nav-link ${
-                    isActive ? "active" : ""
-                  }`
-                }
-                onClick={() => setMenuOpen(false)}
-              >
-                Transactions
-              </NavLink>
-            </li>
-
-            <li className="nav-item">
-              <NavLink
-                to="/labours"
-                className={({ isActive }) =>
-                  `nav-link app-nav-link ${
-                    isActive ? "active" : ""
-                  }`
-                }
-                onClick={() => setMenuOpen(false)}
-              >
-                Labour Management
-              </NavLink>
-            </li>
-          </>
-        )}
-
-        <li className="nav-item">
-          <NavLink
-            to="/stock"
-            className={({ isActive }) =>
-              `nav-link app-nav-link ${
-                isActive ? "active" : ""
-              }`
-            }
+      <nav className="navbar navbar-expand-lg app-navbar sticky-top">
+        <div className="container-fluid px-3 px-lg-4">
+          <Link
+            to={user.role === "ADMIN" ? "/dashboard" : "/stock"}
+            className="navbar-brand app-brand"
             onClick={() => setMenuOpen(false)}
           >
-            Stock Movement
-          </NavLink>
-        </li>
-      </ul>
+            <span className="brand-icon">🍦</span>
+            <span>Ice Cream Godown</span>
+          </Link>
 
-      <div className="app-user-section">
-        <div className="app-user-info">
-          <span className="app-user-name">{user.name}</span>
-          <span className="app-user-role">{user.role}</span>
+          <button
+            className="navbar-toggler app-menu-toggle"
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-controls="mainNavbar"
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+
+          <div
+            className={`collapse navbar-collapse ${menuOpen ? "show" : ""}`}
+            id="mainNavbar"
+          >
+            <ul className="navbar-nav me-auto app-nav-links">
+              {user.role === "ADMIN" && (
+                <>
+                  <li className="nav-item">
+                    <NavLink
+                      to="/dashboard"
+                      className={({ isActive }) =>
+                        `nav-link app-nav-link ${isActive ? "active" : ""}`
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Dashboard
+                    </NavLink>
+                  </li>
+
+                  <li className="nav-item">
+                    <NavLink
+                      to="/products"
+                      className={({ isActive }) =>
+                        `nav-link app-nav-link ${isActive ? "active" : ""}`
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Products
+                    </NavLink>
+                  </li>
+
+                  <li className="nav-item">
+                    <NavLink
+                      to="/transactions"
+                      className={({ isActive }) =>
+                        `nav-link app-nav-link ${isActive ? "active" : ""}`
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Transactions
+                    </NavLink>
+                  </li>
+
+                  <li className="nav-item">
+                    <NavLink
+                      to="/labours"
+                      className={({ isActive }) =>
+                        `nav-link app-nav-link ${isActive ? "active" : ""}`
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Labour Management
+                    </NavLink>
+                  </li>
+                </>
+              )}
+
+              <li className="nav-item">
+                <NavLink
+                  to="/stock"
+                  className={({ isActive }) =>
+                    `nav-link app-nav-link ${isActive ? "active" : ""}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Stock Movement
+                </NavLink>
+              </li>
+            </ul>
+
+            <div className="app-user-section">
+              <div className="app-user-info">
+                <span className="app-user-name">{user.name}</span>
+                <span className="app-user-role">{user.role}</span>
+              </div>
+
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  handleLogout();
+                }}
+                className="btn app-logout-btn"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={() => {
-            setMenuOpen(false);
-            handleLogout();
-          }}
-          className="btn app-logout-btn"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  </div>
-</nav>
+      </nav>
 
       {/* ROUTES */}
 
@@ -777,6 +760,9 @@ const handleLogout = async () => {
           />
         </Routes>
       </div>
+
+      {/* AI INVENTORY ASSISTANT */}
+      <Chatbot />
     </div>
   );
 }
