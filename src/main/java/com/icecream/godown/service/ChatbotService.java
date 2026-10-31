@@ -33,6 +33,16 @@ public class ChatbotService {
         }
 
         String question = message.toLowerCase(Locale.ROOT).trim();
+        // Normalize Hinglish and Hindi question variations
+        question = question
+                .replace("kitna hai", "")
+                .replace("kitna h", "")
+                .replace("kitni hai", "")
+                .replace("kitne hai", "")
+                .replace("batao", "")
+                .replace("dikhao", "")
+                .replace("please", "")
+                .trim();
 
         // Greeting
         if (question.matches(".*\\b(hi|hello|hey)\\b.*")) {
@@ -60,6 +70,96 @@ public class ChatbotService {
             return "Total products in your inventory: " + products.size();
         }
 
+        // Total available stock units
+        if (question.contains("total stock")
+                || question.contains("total units")
+                || question.contains("total quantity")) {
+
+            int totalStock = products.stream()
+                    .mapToInt(Product::getCurrentStock)
+                    .sum();
+
+            return "📦 Total available stock: "
+                    + totalStock + " units across "
+                    + products.size() + " products.";
+        }
+
+        // Out-of-stock products
+        if (question.contains("out of stock")
+                || question.contains("stock is zero")
+                || question.contains("zero stock")) {
+
+            List<Product> outOfStockProducts = products.stream()
+                    .filter(p -> p.getCurrentStock() <= 0)
+                    .toList();
+
+            if (outOfStockProducts.isEmpty()) {
+                return "✅ Great! No out-of-stock products found.";
+            }
+
+            StringBuilder reply = new StringBuilder(
+                    "🚨 Out-of-stock products:\n");
+
+            for (Product product : outOfStockProducts) {
+                reply.append("• ")
+                        .append(product.getProductName())
+                        .append(" (")
+                        .append(product.getProductCode())
+                        .append(")\n");
+            }
+
+            return reply.toString();
+        }
+
+        // Product with the highest stock
+        if (question.contains("highest stock")
+                || question.contains("maximum stock")
+                || question.contains("most stock")) {
+
+            Product highestStockProduct = products.stream()
+                    .max((p1, p2) -> Integer.compare(
+                            p1.getCurrentStock(),
+                            p2.getCurrentStock()))
+                    .orElse(null);
+
+            if (highestStockProduct == null) {
+                return "No products found in your inventory.";
+            }
+
+            return "🏆 Highest-stock product:\n"
+                    + "Name: " + highestStockProduct.getProductName() + "\n"
+                    + "Product Code: " + highestStockProduct.getProductCode() + "\n"
+                    + "Available Stock: "
+                    + highestStockProduct.getCurrentStock() + " units";
+        }
+
+        // Critical stock: 5 or fewer units
+        if (question.contains("critical stock")
+                || question.contains("stock below 5")
+                || question.contains("5 or fewer")) {
+
+            List<Product> criticalStockProducts = products.stream()
+                    .filter(p -> p.getCurrentStock() >= 0
+                            && p.getCurrentStock() <= 5)
+                    .toList();
+
+            if (criticalStockProducts.isEmpty()) {
+                return "✅ No critical-stock products found.";
+            }
+
+            StringBuilder reply = new StringBuilder(
+                    "🚨 Critical-stock products (5 or fewer units):\n");
+
+            for (Product product : criticalStockProducts) {
+                reply.append("• ")
+                        .append(product.getProductName())
+                        .append(" — ")
+                        .append(product.getCurrentStock())
+                        .append(" units\n");
+            }
+
+            return reply.toString();
+        }
         // Low-stock products
         if (question.contains("low stock")
                 || question.contains("running low")
@@ -96,8 +196,8 @@ public class ChatbotService {
 
             LocalDate today = LocalDate.now();
 
-            List<StockTransaction> todayTransactions =
-                    transactionRepository.findAll().stream()
+            List<StockTransaction> todayTransactions
+                    = transactionRepository.findAll().stream()
                             .filter(t -> t.getTransactionTime() != null)
                             .filter(t -> t.getTransactionTime().toLocalDate()
                                     .equals(today))
@@ -124,15 +224,21 @@ public class ChatbotService {
                 || question.contains("latest transaction")
                 || question.contains("last transaction")) {
 
-            List<StockTransaction> transactions =
-                    transactionRepository.findAll().stream()
+            List<StockTransaction> transactions
+                    = transactionRepository.findAll().stream()
                             .sorted((a, b) -> {
                                 LocalDateTime timeA = a.getTransactionTime();
                                 LocalDateTime timeB = b.getTransactionTime();
 
-                                if (timeA == null && timeB == null) return 0;
-                                if (timeA == null) return 1;
-                                if (timeB == null) return -1;
+                                if (timeA == null && timeB == null) {
+                                    return 0;
+                                }
+                                if (timeA == null) {
+                                    return 1;
+                                }
+                                if (timeB == null) {
+                                    return -1;
+                                }
 
                                 return timeB.compareTo(timeA);
                             })
@@ -164,11 +270,11 @@ public class ChatbotService {
         // Product search by name or product code
         for (Product product : products) {
 
-            String productName =
-                    product.getProductName().toLowerCase(Locale.ROOT);
+            String productName
+                    = product.getProductName().toLowerCase(Locale.ROOT);
 
-            String productCode =
-                    product.getProductCode().toLowerCase(Locale.ROOT);
+            String productCode
+                    = product.getProductCode().toLowerCase(Locale.ROOT);
 
             if (question.contains(productName)
                     || question.contains(productCode)) {
